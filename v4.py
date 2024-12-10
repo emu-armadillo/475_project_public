@@ -364,7 +364,7 @@ def reduce_2_combine(in_file_1, in_file_2,point_cloud):
 def split_point_cloud(n,infile):
     i = 0
     with laspy.open(infile) as input_las:
-        for cur_chunk in input_las.chunk_iterator(1000000):
+        for cur_chunk in input_las.chunk_iterator(10000000):
             point_data = np.stack([cur_chunk.X, cur_chunk.Y, cur_chunk.Z], axis=0).transpose((1, 0))
             point_cloud = o3d.geometry.PointCloud()
             point_cloud.points = o3d.utility.Vector3dVector(point_data)
@@ -414,6 +414,7 @@ def split_pointcloud_x(n,infile):
             cropped_pcd = point_cloud.crop(o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound))
             fn = os.path.splitext(os.path.basename(infile))[0]
             o3d.io.write_point_cloud(f"./split2/{fn}_{i}X.ply", cropped_pcd)
+            #pv_visualize_mesh(f"./split2/{fn}_{i}X.ply")
             
     #         #visualize each cropped point cloud
    # o3d.visualization.draw_geometries([cropped_pcd])
@@ -466,7 +467,7 @@ def split_x_dir(in_dir):
             print(
                 f
             )
-            split_pointcloud_x(5,f)
+            split_pointcloud_x(10,f)
 
 def reduce_dir(in_dir):
      r_sample =  os.listdir(in_dir)

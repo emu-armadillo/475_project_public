@@ -7,19 +7,7 @@ import pyvista as pv
 import os as os
 import random
 
-#https://www.open3d.org/docs/latest/tutorial/Advanced/pointcloud_outlier_removal.html
-def display_inlier_outlier(cloud, ind):
-    inlier_cloud = cloud.select_by_index(ind)
-    outlier_cloud = cloud.select_by_index(ind, invert=True)
 
-    print("Showing outliers (red) and inliers (gray): ")
-    outlier_cloud.paint_uniform_color([1, 0, 0])
-    inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
-    o3d.visualization.draw_geometries([inlier_cloud, outlier_cloud],
-                                      zoom=0.3412,
-                                      front=[0.4257, -0.2125, -0.8795],
-                                      lookat=[2.6172, 2.0475, 1.532],
-                                      up=[-0.0694, -0.9768, 0.2024])
     
 
 
@@ -163,6 +151,14 @@ def pv_decimate_mesh(infile):
     p =".\\reduced\\"+os.path.splitext(os.path.basename(outfile))[0]+".ply"
     print(f"path:{p}")
     pv.PolyData.save(save_cloud,p)
+
+    t1 = o3d.io.read_point_cloud(p)
+    t2 = o3d.io.read_point_cloud(p)
+    avgd = t1.compute_point_cloud_distance(t2)
+    max = np.max(avgd)
+    mean = np.mean(avgd)
+    print(f"********************************************meax:{max} , mean:{mean}")
+
 
 
 
@@ -474,7 +470,7 @@ def split_x_dir(in_dir):
 
 def reduce_dir(in_dir):
      r_sample =  os.listdir(in_dir)
-    # r_sample = random.sample(r_sample,10)
+     r_sample = random.sample(r_sample,10)
      for filename in r_sample:
         f = os.path.join(in_dir, filename)
         # checking if it is a file
@@ -485,10 +481,10 @@ def reduce_dir(in_dir):
             p =".\\reduced\\"+os.path.splitext(os.path.basename(f))[0]+"_reduced"+".ply"
             if not os.path.exists(p):
                 print(f"{p} does not exist")
-                try:
-                    pv_decimate_mesh(f)
-                except:
-                    print(f"error processing {p}")
+               # try:
+                pv_decimate_mesh(f)
+               # except:
+                    #print(f"error processing {p}")
             else:
                 print(f"{p} already proccesed")
 
@@ -496,10 +492,10 @@ if __name__=="__main__":
 
     os.chdir("D:\\data_475")
 
-    split_dir("C:\\Users\\code8\\Downloads\\475_in")
-    split_dir("../data2")
+    #split_dir("C:\\Users\\code8\\Downloads\\475_in")
+   # split_dir("../data2")
 
-    split_x_dir("./split")
+   # split_x_dir("./split")
 
     reduce_dir("split2")
 

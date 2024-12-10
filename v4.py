@@ -493,9 +493,9 @@ if __name__=="__main__":
     os.chdir("D:\\data_475")
 
     #split_dir("C:\\Users\\code8\\Downloads\\475_in")
-   # split_dir("../data2")
+    split_dir("../data2")
 
-   # split_x_dir("./split")
+    split_x_dir("./split")
 
     reduce_dir("split2")
 

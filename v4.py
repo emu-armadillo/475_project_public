@@ -7,7 +7,7 @@ import pyvista as pv
 import os as os
 import random
 
-
+#https://www.open3d.org/docs/latest/tutorial/Advanced/pointcloud_outlier_removal.html
 def display_inlier_outlier(cloud, ind):
     inlier_cloud = cloud.select_by_index(ind)
     outlier_cloud = cloud.select_by_index(ind, invert=True)

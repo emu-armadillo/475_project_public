@@ -7,15 +7,17 @@ import pyvista as pv
 import os as os
 import random
 
-def split_point_cloud(n):
-    #load the point cloud from a PLY file
-    las = laspy.read("t1.laz")
 
-    points =  np.vstack((las.x, las.y, las.z)).transpose()
 
-    # Create an Open3D point cloud object
+
+def split_point_cloud_n(n,inf):
+
+  
+
+    point_cloud_in =  o3d.io.read_point_cloud(inf)
+
     point_cloud  = o3d.geometry.PointCloud()
-    point_cloud.points = o3d.utility.Vector3dVector(points)
+    point_cloud.points = o3d.utility.Vector3dVector(point_cloud_in.points)
 
 
 
@@ -36,19 +38,19 @@ def split_point_cloud(n):
         for j in range(n):
             min_bound = np.array([
                 bbox.min_bound[0] + i * step_x,
-                bbox.min_bound[1] + j * step_y,
+                bbox.min_bound[1] ,
                 bbox.min_bound[2]
             ])
             max_bound = np.array([
                 bbox.min_bound[0] + (i + 1) * step_x,
-                bbox.min_bound[1] + (j + 1) * step_y,
+                bbox.max_bound[1],
                 bbox.max_bound[2]
             ])
             cropped_pcd = point_cloud.crop(o3d.geometry.AxisAlignedBoundingBox(min_bound, max_bound))
             
-            #visualize each cropped point cloud
-            #o3d.visualization.draw_geometries([cropped_pcd])
+           
             #save each cropped point cloud
+            print(f"cropped_{i}X{j}.ply")
             o3d.io.write_point_cloud(f"cropped_{i}X{j}.ply", cropped_pcd)
 #pyvist decimate mesh
 def pv_decimate_mesh_visualize(infile):
@@ -112,23 +114,7 @@ def pv_decimate_mesh_visualize(infile):
     print(f"path:{p}")
     pv.PolyData.save(save_cloud,p)
 
-    # surf = cloud.delaunay_2d()
-    # decimated = surf.decimate(0.75)
-
-    # wrap3d = pv.PolyData(reduced1.points)
-    # wrap3d = pv.wrap(wrap3d)
-    # wrap3d.plot()
-
-    # p = pv.Plotter()
-    # #p.add_mesh(cloud)
-    # p.add_mesh(decimated)
-    # p.show()
-    # p = pv.Plotter()
-
-    # slices = reduced1.slice_along_axis(n=3, axis='z')
-    # p.add_mesh(slices)
-    # p.show()
-
+  
 #pyvist decimate mesh
 def pv_decimate_mesh_NN(infile):
       #las = laspy.read(infile)
@@ -180,18 +166,6 @@ def pv_decimate_mesh_NN(infile):
     pv.PolyData.save(save_cloud,p)
     
 
-def open3d_rolling_ball_technique():
-    
-    # Load or create a point cloud
-    pcl = o3d.io.read_point_cloud("cropped_0X0.ply")
-
-    # Estimate normals for the point cloud (if not already present)
-    pcl.estimate_normals()
-
-    hull, _ = pcl.compute_convex_hull()
-    hull_ls = o3d.geometry.LineSet.create_from_triangle_mesh(hull)
-    hull_ls.paint_uniform_color((1, 0, 0))
-    o3d.visualization.draw_geometries([pcl, hull_ls])
 def pv_reduce_and_compare(infile):
     outfile = infile.replace(".ply","_reduced.ply")
     
@@ -232,17 +206,9 @@ def pv_reduce_and_compare(infile):
     surf3 = surf2.decimate(1-ratio,progress_bar=True)
     
 
-    #reduced1 = surf.decimate(0.95,progress_bar=True)
-    # surf_cloud.compute_implicit_distance(surf2, inplace = True)
-    # d1= surf_cloud['implicit_distance']
-    #d2 = surf3.compute_implicit_distancee(cloud)
-
     p = pv.Plotter(shape=(1,2))
   
    
-    # p.add_mesh(cloud,color='red',point_size=1)
-    # p.add_mesh(surf)
-    #p.add_mesh(surf,color= "red", scalars='implicit_distance', cmap='bwr')
     p.subplot(0, 0)
     p.add_text("cloud reduction", font_size=30)
     p.add_mesh(surf_cloud)
@@ -314,12 +280,6 @@ for filename in l:
         print(
             f
         )
-        #split_point_cloud(2)
-        #open3d_rolling_ball_technique()
-        pv_reduce_and_compare("cropped_1X2.ply")
-#pv_reduce_and_compare("./split2/RS000010_3X_7X.ply")
-
-#files = [f for f in os.listdir('.') if os.path.isfile(f)]
-# for f in files:
-#     print(f)
+    
+        pv_reduce_and_compare(f)
 

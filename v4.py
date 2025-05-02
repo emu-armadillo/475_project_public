@@ -1,7 +1,6 @@
 import laspy
 import open3d as o3d
 import numpy as np
-
 import pyvista as pv
 #yes
 import os as os
@@ -13,6 +12,7 @@ import random
 
 
 #splits point cloud
+#into blocks 3X3 in x y axis
 def one_ninth_reduction():
     reduce_point_cloud = o3d.io.read_point_cloud("regular.ply")
     bbox = reduce_point_cloud.get_axis_aligned_bounding_box()
@@ -30,6 +30,8 @@ def one_ninth_reduction():
     o3d.io.write_point_cloud("regular5.ply",cropped_pcd)
 
 
+#uses pivista to decimate the point cloud then creates a
+#surface from the decimated cloud then displays mesh and point cloud
 def pv_decimate_meshv2(infile, outfile):
     las = laspy.read(infile)
     
@@ -76,39 +78,16 @@ def pv_decimate_meshv2(infile, outfile):
 
 
 
-
+#creates mesh based on point cloud then does 99% reduction on the mesh, saves the resulting vertexes
 def pv_decimate_meshv3(infile, outfile):
     cloud = pv.read("r_test_points.ply")
     print(f"number of points {cloud.number_of_points}")
-#     tolerance = 0.01
-#    # cloud.plot(point_size=2)
-#     cloud2 = cloud.clean(
-#     point_merging=True,
-#     merge_tol=tolerance,
-#     lines_to_points=False,
-#     polys_to_lines=False,
-#     strips_to_polys=False,
-#     inplace=False,
-#     absolute=False,
-#     progress_bar=True,  
-#     )
-
-    #print(f"number of points after reduction {cloud2.number_of_points}")
 
     print("loaded")
     surf = cloud.delaunay_2d(progress_bar=True)
 
     reduced1 = surf.decimate(0.99,progress_bar=True)
-    #decimated = surf.decimate(0.999)
 
-    # p = pv.Plotter()
-    # p.add_mesh(cloud,color='red',point_size=1)
-    # p.add_mesh(surf)
-    # p.show()
-    # p = pv.Plotter()
-    # p.add_mesh(cloud,color='red',point_size=1)
-    # p.add_mesh(reduced1)
-    # p.show()
 
     num_ver = len(reduced1.points)
     print(f"number of vertexs in the mesh is {num_ver}")
@@ -120,7 +99,9 @@ def pv_decimate_meshv3(infile, outfile):
 
 
 
-#pyvist decimate mesh
+#pyvist decimate mesh using surface reduction,
+#outputs into the ./reduced/directory with the filename with _reduced added to the end
+#.ply files as input
 def pv_decimate_mesh(infile):
       #las = laspy.read(infile)
     outfile = infile.replace(".ply","_reduced.ply")
@@ -129,7 +110,7 @@ def pv_decimate_mesh(infile):
     # Create a PyVista PolyData object from the points
     cloud = pv.read(infile)
     scale_factor = 4
-    #this is to ensure the plane is created in the correct direction
+    #this is to ensure the plane is created in the correct direction by making the x y dimesions the largeres axis pair
     cloud = cloud.scale([scale_factor,scale_factor,1])
 
 
@@ -137,7 +118,6 @@ def pv_decimate_mesh(infile):
     surf = cloud.delaunay_2d(progress_bar=True)
 
     reduced1 = surf.decimate(0.99,progress_bar=True)
-    #decimated = surf.decimate(0.999)
 
     num_ver = len(reduced1.points)
 
@@ -151,18 +131,20 @@ def pv_decimate_mesh(infile):
     p =".\\reduced\\"+os.path.splitext(os.path.basename(outfile))[0]+".ply"
     print(f"path:{p}")
     pv.PolyData.save(save_cloud,p)
-
-    t1 = o3d.io.read_point_cloud(p)
-    t2 = o3d.io.read_point_cloud(p)
-    avgd = t1.compute_point_cloud_distance(t2)
-    max = np.max(avgd)
-    mean = np.mean(avgd)
-    print(f"********************************************meax:{max} , mean:{mean}")
-
-
+    #difference reporting
+    # t1 = o3d.io.read_point_cloud(p)
+    # t2 = o3d.io.read_point_cloud(p)
+    # avgd = t1.compute_point_cloud_distance(t2)
+    # max = np.max(avgd)
+    # mean = np.mean(avgd)
+    # print(f"********************************************meax:{max} , mean:{mean}")
 
 
-#pyvist decimate mesh
+
+
+#pyvist decimate point cloud using the merging of nearest neighbors
+#outputs into the ./reduced/directory with the filename with _reduced added to the end
+#.ply files as input
 def pv_decimate_mesh_NN(infile):
       #las = laspy.read(infile)
     outfile = infile.replace(".ply","_reduced.ply")
@@ -211,8 +193,10 @@ def pv_decimate_mesh_NN(infile):
 
 
 #pyvist decimate mesh
+#this version visualizes the results
+#for data exploration purposes
 def pv_decimate_mesh_visualize(infile):
-    #las = laspy.read(infile)
+
     outfile = infile.replace(".ply","_reduced.ply")
     
     print("read done")
@@ -222,20 +206,6 @@ def pv_decimate_mesh_visualize(infile):
     cloud = cloud.scale([scale_factor,scale_factor,1])
 
     print(f"number of points {cloud.number_of_points}")
-#     tolerance = 0.01
-#    # cloud.plot(point_size=2)
-#     cloud2 = cloud.clean(
-#     point_merging=True,
-#     merge_tol=tolerance,
-#     lines_to_points=False,
-#     polys_to_lines=False,
-#     strips_to_polys=False,
-#     inplace=False,
-#     absolute=False,
-#     progress_bar=True,  
-#     )
-
-    #print(f"number of points after reduction {cloud2.number_of_points}")
 
     print("loaded")
     p = pv.Plotter()
@@ -272,23 +242,13 @@ def pv_decimate_mesh_visualize(infile):
     print(f"path:{p}")
     pv.PolyData.save(save_cloud,p)
 
-    # surf = cloud.delaunay_2d()
-    # decimated = surf.decimate(0.75)
-
-    # wrap3d = pv.PolyData(reduced1.points)
-    # wrap3d = pv.wrap(wrap3d)
-    # wrap3d.plot()
-
-    # p = pv.Plotter()
-    # #p.add_mesh(cloud)
-    # p.add_mesh(decimated)
-    # p.show()
 
     
 
 
 
 #pyvist decimate mesh
+#first simplest version can be used for data exporlation
 def pv_visualize_mesh(infile):
     #las = laspy.read(infile)
     #outfile = infile.replace(".ply","_reduced.ply")
@@ -320,7 +280,8 @@ def pv_visualize_mesh(infile):
     
 
 
-
+#reduces two ply files and merges them shows results
+#for data exploration purposes
 #reduce_2_combine("regular3.ply","regular4.ply")
 def reduce_2_combine(in_file_1, in_file_2,point_cloud):
     cloud1 = pv.read(in_file_1)
@@ -360,7 +321,10 @@ def reduce_2_combine(in_file_1, in_file_2,point_cloud):
 
 
     
-
+#splits a las file into managable chunks
+#the size you want depends on how much ram you have avalible
+#uses built in streaming function points may be in odd shapes
+#can cause problems
 def split_point_cloud(n,infile):
     i = 0
     with laspy.open(infile) as input_las:
@@ -377,7 +341,9 @@ def split_point_cloud(n,infile):
     return
 
 
-
+#splits point cloud into N chunks in the x direction
+#used for long thin rectangles created by split the point cloud sequentially
+#the goal is to get squares, but the x y scaling method used in the current decimate mesh funciton gives a lot of leway
 def split_pointcloud_x(n,infile):
     #load the point cloud from a PLY file
    # las = laspy.read(infile)
@@ -432,7 +398,7 @@ def split_dir(in_dir):
             )
             split_point_cloud(11,f)
           
-
+#combines and entire directory of ply files into a single one
 def combine_dir(in_dir):
     flist = os.listdir(in_dir)
     f = os.path.join(in_dir, in_dir[1])
@@ -450,6 +416,7 @@ def combine_dir(in_dir):
         #point_cloud = o3d.io.read_point_cloud(infile)
     o3d.io.write_point_cloud("combined.ply",curr_point_cloud)
 
+#visualizes a split of LAS file, for data exploration purposes
 def visualize_point_cloud_1():
     i = 0
     with laspy.open("C:\\Users\\code8\\Downloads\\New folder (8)\\split\\RS000011_5X.ply") as input_las:
@@ -458,7 +425,7 @@ def visualize_point_cloud_1():
             point_cloud = o3d.geometry.PointCloud()
             point_cloud.points = o3d.utility.Vector3dVector(point_data)
            
-          
+#splits an entire directory of ply files in the x direction         
 def split_x_dir(in_dir):
     for filename in os.listdir(in_dir):
         f = os.path.join(in_dir, filename)
@@ -469,6 +436,7 @@ def split_x_dir(in_dir):
             )
             split_pointcloud_x(10,f)
 
+#reduces and entire directory of ply files
 def reduce_dir(in_dir):
      r_sample =  os.listdir(in_dir)
      r_sample = random.sample(r_sample,10)
@@ -490,7 +458,7 @@ def reduce_dir(in_dir):
                 print(f"{p} already proccesed")
 
 if __name__=="__main__":
-
+    #replace with your directory
     os.chdir("D:\\data_475")
 
     #split_dir("C:\\Users\\code8\\Downloads\\475_in")
